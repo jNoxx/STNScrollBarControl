@@ -221,23 +221,44 @@ static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
 
 - (void)updateScrollBarText {
     NSIndexPath *indexPath = [self indexPathForVisibleItem];
-    NSString *itemString = [self itemStringAtIndexPath:indexPath];
-    [self.text updateTextWithItemString:itemString];
+    if (indexPath) {
+        NSString *itemString = [self itemStringAtIndexPath:indexPath];
+        if (itemString) {
+            [self.text updateTextWithItemString:itemString];
+        }
+    }
 }
 
 - (NSIndexPath *)indexPathForVisibleItem {
     NSArray<NSIndexPath *> *indexPaths;
+    
     if ([_scrollView isKindOfClass:[UITableView class]]) {
         indexPaths = [(UITableView *)self.scrollView indexPathsForVisibleRows];
     } else if ([_scrollView isKindOfClass:[UICollectionView class]]) {
         indexPaths = [(UICollectionView *)self.scrollView indexPathsForVisibleItems];
-        indexPaths = [indexPaths sortedArrayUsingComparator:^NSComparisonResult(NSIndexPath *idx1, NSIndexPath *idx2) {
-            return [idx1 compare:idx2];
-        }];
+        
+        if (indexPaths.count > 0) {
+            indexPaths = [indexPaths sortedArrayUsingComparator:^NSComparisonResult(NSIndexPath *idx1, NSIndexPath *idx2) {
+                return [idx1 compare:idx2];
+            }];
+        }
     }
+    
+    if (indexPaths.count == 0) {
+        // Handle the case when there are no visible items
+        return nil;
+    }
+    
     CGFloat ratio = [self thumbOffsetRatio];
     NSInteger idx = MIN(indexPaths.count - 1, MAX(0, floor(indexPaths.count * ratio)));
-    return indexPaths[idx];
+    
+    // Check if idx is within bounds
+    if (idx >= 0 && idx < indexPaths.count) {
+        return indexPaths[idx];
+    } else {
+        // Handle the case when the calculated index is out of bounds
+        return nil;
+    }
 }
 
 #pragma mark - STNScrollBarDelegate
