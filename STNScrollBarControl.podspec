@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "STNScrollBarControl"
-  s.version      = "1.0.0"
+  s.version      = "1.0.1"
   s.summary      = "A scroll bar like Google photo's can scroll scrollview/tableview/collectionview and show text depending on cell"
   s.description  = <<-DESC
                    The scroll bar is subclass of UIControl and it is very easly added to scrollview/tableview/collectionview. It also can show text when implement delegate.
