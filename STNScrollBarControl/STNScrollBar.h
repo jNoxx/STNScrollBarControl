@@ -12,6 +12,9 @@
 @protocol STNScrollBarDelegate <NSObject>
 @optional
 - (NSString *)scrollBar:(STNScrollBar *)scrollBar itemStringAtIndexPath:(NSIndexPath *)indexPath;
+- (void)scrollBarStartedManuallyScrubbing:(STNScrollBar *)scrollBar;
+- (void)scrollBarPausedManuallyScrubbing:(STNScrollBar *)scrollBar atIndexPath:(NSIndexPath *)indexPath;
+- (void)scrollBarEndedManuallyScrubbing:(STNScrollBar *)scrollBar atIndexPath:(NSIndexPath *)indexPath;
 @end
 
 @interface STNScrollBar : UIControl

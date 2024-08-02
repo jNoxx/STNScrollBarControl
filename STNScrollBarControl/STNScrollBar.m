@@ -15,6 +15,7 @@ static const CGFloat kSTNScrollBarWidth = 30.0;
 static const CGFloat kSTNScrollBarEnableThreshold = 1.5;
 static const CGFloat kSTNScrollBarAnimationInterval = 0.3;
 static const CGFloat kSTNScrollBarAnimationHideDelay = 1.0;
+static const CGFloat kSTNScrollBarPauseTrackingDelay = 1.0;
 
 static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
 
@@ -22,6 +23,7 @@ static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
 @property (strong, nonatomic) STNScrollBarThumb *thumb;
 @property (strong, nonatomic) STNScrollBarText *text;
 @property (weak, nonatomic) NSTimer *hideAnimationTimer;
+@property (weak, nonatomic) NSTimer *scrubbingPauseTimer;
 @end
 
 @implementation STNScrollBar
@@ -50,6 +52,11 @@ static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
     
     if (self.hideAnimationTimer) {
         [self.hideAnimationTimer invalidate];
+    }
+    
+    if (self.scrubbingPauseTimer) {
+        [self.scrubbingPauseTimer invalidate];
+        self.scrubbingPauseTimer = nil;
     }
     
     self.hidden = YES;
@@ -139,6 +146,27 @@ static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
     }
 }
 
+- (void)startPauseTimer {
+    [self cancelPauseTimer];
+    
+    self.scrubbingPauseTimer = [NSTimer scheduledTimerWithTimeInterval:kSTNScrollBarPauseTrackingDelay target:self selector:@selector(notifyDelegateOnPauseTimer) userInfo:nil repeats:NO];
+}
+
+- (void)cancelPauseTimer {
+    if (self.scrubbingPauseTimer) {
+        [self.scrubbingPauseTimer invalidate];
+        self.scrubbingPauseTimer = nil;
+    }
+}
+
+- (void)notifyDelegateOnPauseTimer {
+    if (self.delegate) {
+        NSIndexPath *indexPath = [self indexPathForVisibleItem];
+        [self.delegate scrollBarPausedManuallyScrubbing:self atIndexPath:indexPath];
+    }
+}
+
+
 #pragma mark - Touch Event
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
@@ -152,6 +180,10 @@ static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
         [self updateScrollViewContentOffset];
         [self showText];
         [self cancelHideWithDelay];
+        if (self.delegate) {
+            [self.delegate scrollBarStartedManuallyScrubbing:self];
+        }
+        [self startPauseTimer];
         return YES;
     }
     
@@ -160,12 +192,22 @@ static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
 
 - (BOOL)continueTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
     [self updateThumbPositionByTouch:touch];
+    // Start a timer, if you hold still for a bit, that it starts loading after all, since not everyone will understand you have to let go to properly start.
+    [self startPauseTimer];
+
     return YES;
 }
 
 - (void)endTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
     [self updateThumbPositionByTouch:touch];
     [self hideWithDelay];
+    [self cancelPauseTimer];
+    
+    if (self.delegate) {
+        // Add the indexPath where we think it stopped scrubbing (Same what we wil use for updating the Thumb).
+        NSIndexPath *indexPath = [self indexPathForVisibleItem];
+        [self.delegate scrollBarEndedManuallyScrubbing:self atIndexPath:indexPath];
+    }
 }
 
 - (void)updateScrollViewContentOffset {
