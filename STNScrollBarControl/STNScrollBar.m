@@ -204,9 +204,11 @@ static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
     [self cancelPauseTimer];
     
     if (self.delegate) {
-        // Add the indexPath where we think it stopped scrubbing (Same what we wil use for updating the Thumb).
+        // Add the indexPath where we think it stopped scrubbing (Same what we will use for updating the Thumb).
         NSIndexPath *indexPath = [self indexPathForVisibleItem];
         [self.delegate scrollBarEndedManuallyScrubbing:self atIndexPath:indexPath];
+        // Also update the title, since it happens that we did it too fast and it doesnt update properly.
+        [self updateScrollBarText];
     }
 }
 
