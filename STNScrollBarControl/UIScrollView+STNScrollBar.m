@@ -20,9 +20,10 @@
 
 - (CGFloat)stn_contentInsetBottom {
     CGFloat bottom = self.contentInset.bottom;
-    if (@available(iOS 11, *)) {
-        bottom += self.adjustedContentInset.bottom;
-    }
+    // Disabled for now, it added the contentinset twice. We dont want that.
+    //    if (@available(iOS 11, *)) {
+//        bottom += self.adjustedContentInset.bottom;
+//    }
     return bottom;
 }
 
