@@ -161,8 +161,10 @@ static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
 
 - (void)notifyDelegateOnPauseTimer {
     if (self.delegate) {
-        NSIndexPath *indexPath = [self indexPathForVisibleItem];
-        [self.delegate scrollBarPausedManuallyScrubbing:self atIndexPath:indexPath];
+        if ([self.delegate respondsToSelector:@selector(scrollBarPausedManuallyScrubbing:atIndexPath:)]) {
+            NSIndexPath *indexPath = [self indexPathForVisibleItem];
+            [self.delegate scrollBarPausedManuallyScrubbing:self atIndexPath:indexPath];
+        }
     }
 }
 
@@ -181,7 +183,10 @@ static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
         [self showText];
         [self cancelHideWithDelay];
         if (self.delegate) {
-            [self.delegate scrollBarStartedManuallyScrubbing:self];
+            // Added extra fix, to check if the delegate responds to this method... But, NBBrowse should never be using this, how does this come?
+            if ([self.delegate respondsToSelector:@selector(scrollBarStartedManuallyScrubbing:)]) {
+                [self.delegate scrollBarStartedManuallyScrubbing:self];
+            }
         }
         [self startPauseTimer];
         return YES;
@@ -206,7 +211,9 @@ static NSString * const kSTNScrollViewContentInsetKeyPath = @"contentInset";
     if (self.delegate) {
         // Add the indexPath where we think it stopped scrubbing (Same what we will use for updating the Thumb).
         NSIndexPath *indexPath = [self indexPathForVisibleItem];
-        [self.delegate scrollBarEndedManuallyScrubbing:self atIndexPath:indexPath];
+        if ([self.delegate respondsToSelector:@selector(scrollBarEndedManuallyScrubbing:atIndexPath:)]) {
+            [self.delegate scrollBarEndedManuallyScrubbing:self atIndexPath:indexPath];
+        }
         // Also update the title, since it happens that we did it too fast and it doesnt update properly.
         [self updateScrollBarText];
     }
